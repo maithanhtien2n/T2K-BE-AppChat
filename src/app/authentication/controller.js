@@ -6,6 +6,7 @@ module.exports = {
     await onResponse(req, res, model.registerMD, {
       checkData: ["user_name", "password"],
       data: ({ user_name, password } = req.body),
+      message: "Đăng ký tài khoản thành công!",
     });
   },
 
@@ -55,10 +56,16 @@ module.exports = {
 
   // Socket.io -------------------------------------------
 
-  createMessageCT: async (data) => {
+  createMessageCT: async (data, host) => {
     try {
-      const { room_id, sender, content } = data;
-      return await model.createMessageMD({ room_id, sender, content });
+      const { room_id, sender, content, image } = data;
+      return await model.createMessageMD({
+        room_id,
+        sender,
+        content,
+        image,
+        host,
+      });
     } catch (error) {
       throw error;
     }

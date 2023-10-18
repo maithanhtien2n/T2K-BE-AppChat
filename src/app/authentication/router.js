@@ -22,8 +22,7 @@ module.exports = (router, io) => {
     });
   };
   onApiOpenFile("/");
-  onApiOpenFile("/accounts/");
-  onApiOpenFile("/products/");
+  onApiOpenFile("/files-message/");
 
   // API đăng ký tài khoản
   router.post(`${commonRoute}/account/register`, controller.registerCT);
@@ -52,8 +51,13 @@ module.exports = (router, io) => {
     console.log("Đã kết nối!");
 
     socket.on(`chat-message`, async (data) => {
-      const res = await controller.createMessageCT(data);
-      io.emit(`chat-message-${data?.room_id}`, res);
+      if (data?.content || data?.image) {
+        const res = await controller.createMessageCT(
+          data,
+          socket.request.headers.host
+        );
+        io.emit(`chat-message-${data?.room_id}`, res);
+      }
     });
   });
 };

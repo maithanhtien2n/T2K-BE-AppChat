@@ -109,7 +109,7 @@ module.exports = {
         .populate({
           path: "messages",
           model: Message,
-          select: "sender content createdAt",
+          select: "sender content image createdAt",
           populate: {
             path: "sender",
             model: Account,
@@ -166,7 +166,7 @@ module.exports = {
 
   // Socket.io -------------------------------------------
 
-  createMessageMD: async ({ room_id, sender, content }) => {
+  createMessageMD: async ({ room_id, sender, content, image, host }) => {
     try {
       if (content === "focus") {
         return {
@@ -183,7 +183,19 @@ module.exports = {
           sender,
         };
       }
-      const message = await Message.create({ sender, content });
+
+      const filePath = image
+        ? onImagePath(image.name, "files-message/")
+        : undefined;
+
+      const message = await Message.create({
+        sender,
+        content,
+        image: image ? onUrlFile(host, filePath) : undefined,
+      });
+
+      if (image) onSaveFile(filePath, image.base64);
+
       await Room.updateOne(
         { _id: room_id },
         { $push: { messages: message?._id } }
@@ -198,7 +210,7 @@ module.exports = {
         .populate({
           path: "messages",
           model: Message,
-          select: "sender content createdAt",
+          select: "sender content image createdAt",
           populate: {
             path: "sender",
             model: Account,

@@ -26,7 +26,8 @@ const roomSchema = new Schema(
 const messageSchema = new Schema(
   {
     sender: { type: Schema.Types.ObjectId, ref: "Account" },
-    content: { type: String, required: true },
+    content: { type: String, required: false },
+    image: { type: String, required: false },
   },
   {
     timestamps: true,
