@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const { throwError } = require("../../utils/index");
+const { JWT_SECRET } = require("../../utils/render");
 
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -9,7 +10,7 @@ const authenticateToken = (req, res, next) => {
     if (!token) {
       throwError(250, "Mã token không tồn tại!");
     }
-    jwt.verify(token, process.env.JWT_SECRET, (error, data) => {
+    jwt.verify(token, JWT_SECRET, (error, data) => {
       if (error) {
         throwError(251, "Mã token không chính xác!");
       }

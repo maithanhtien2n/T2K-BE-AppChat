@@ -1,5 +1,6 @@
 const { Account, Room, Message } = require("./config");
 const { throwError } = require("../../utils/index");
+const { JWT_SECRET } = require("../../utils/render");
 const {
   onUrlFile,
   onImagePath,
@@ -52,7 +53,7 @@ module.exports = {
 
       return {
         user_info: userInfo,
-        accessToken: jwt.sign(userInfo, process.env.JWT_SECRET, {
+        accessToken: jwt.sign(userInfo, JWT_SECRET, {
           expiresIn: "1h",
         }),
       };
