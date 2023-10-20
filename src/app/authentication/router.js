@@ -56,7 +56,7 @@ module.exports = (router, io) => {
           data,
           socket.request.headers.host
         );
-        io.emit(`chat-message-${data?.room_id}`, res);
+        io.emit(`chat-message-${data?.room_id}`, { message: res, data });
       }
     });
   });

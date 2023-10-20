@@ -1,5 +1,3 @@
-const JWT_SECRET = "xinchaocacbandaylamatokencuaminh56746677";
-
 const generateRandomCode = (v1, v2, length) => {
   var characters = `${v1}${v2}`;
   var code = "";
@@ -29,4 +27,4 @@ const formatDate = (dateString, showTime = false) => {
   return showTime ? `${formattedTime} ${formattedDate}` : formattedDate;
 };
 
-module.exports = { generateRandomCode, formatDate, JWT_SECRET };
+module.exports = { generateRandomCode, formatDate };
