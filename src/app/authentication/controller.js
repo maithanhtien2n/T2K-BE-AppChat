@@ -33,6 +33,15 @@ module.exports = {
     });
   },
 
+  updateRoomCT: async (req, res) => {
+    const { room_id, room_name, room_image } = req.body;
+    await onResponse(req, res, model.updateRoomMD, {
+      checkData: ["room_id"],
+      data: { room_id, room_name, room_image, host: req.headers.host },
+      message: "Cập nhật thông tin phòng thành công!",
+    });
+  },
+
   getRoomCT: async (req, res) => {
     const { account_id, room_id } = req.query;
     await onResponse(req, res, model.getRoomMD, {
@@ -54,6 +63,34 @@ module.exports = {
     });
   },
 
+  createPostsCT: async (req, res) => {
+    const { account_id, content, room_id, file } = req.body;
+    await onResponse(req, res, model.createPostsMD, {
+      checkData: ["account_id", "content"],
+      data: {
+        account_id,
+        content,
+        room_id,
+        file,
+        host: req.headers.host,
+      },
+      message: "Bài viết của bạn đã được tải lên thành công!",
+    });
+  },
+
+  getAllPostsCT: async (req, res) => {
+    await onResponse(req, res, model.getAllPostsMD, {
+      data: {},
+    });
+  },
+
+  getPostsDetailCT: async (req, res) => {
+    const posts_id = req.params.id;
+    await onResponse(req, res, model.getPostsDetailMD, {
+      data: { posts_id },
+    });
+  },
+
   // Socket.io -------------------------------------------
 
   createMessageCT: async (data, host) => {
@@ -66,6 +103,14 @@ module.exports = {
         image,
         host,
       });
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  likePostsCT: async (data) => {
+    try {
+      return await model.likePostsMD(data);
     } catch (error) {
       throw error;
     }

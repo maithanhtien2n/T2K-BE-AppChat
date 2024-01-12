@@ -1,4 +1,4 @@
-const { Account, Room, Message } = require("./config");
+const { Account, Room, Message, Posts } = require("./config");
 const { throwError } = require("../../utils/index");
 const {
   onUrlFile,
@@ -71,7 +71,11 @@ module.exports = {
 
   createRoomMD: async ({ room_name, members }) => {
     try {
-      const room = await Room.create({ room_name, members });
+      const room = await Room.create({
+        room_name,
+        room_admin: members,
+        members,
+      });
 
       const message = await Message.create({
         sender: members,
@@ -84,6 +88,38 @@ module.exports = {
       );
 
       return room;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  updateRoomMD: async ({ room_id, room_name, room_image, host }) => {
+    try {
+      const filePath = room_image
+        ? onImagePath(room_image.name, "files-message/")
+        : undefined;
+
+      const room = await Room.findOne({ _id: room_id });
+
+      if (room.room_image && room_image) {
+        onDeleteFile(room.room_image, "files-message/");
+      }
+
+      let body = {};
+
+      if (room_name) {
+        body.room_name = room_name;
+      }
+
+      if (room_image) {
+        body.room_image = room_image ? onUrlFile(host, filePath) : undefined;
+      }
+
+      const roomUpdate = await Room.updateOne({ _id: room_id }, body);
+
+      if (room_image) onSaveFile(filePath, room_image.base64);
+
+      return roomUpdate;
     } catch (error) {
       throw error;
     }
@@ -164,6 +200,58 @@ module.exports = {
     }
   },
 
+  createPostsMD: async ({ account_id, content, room_id, file, host }) => {
+    try {
+      const filePath = file
+        ? onImagePath(file.name, "files-message/")
+        : undefined;
+
+      const posts = await Posts.create({
+        poster: account_id,
+        content,
+        room_id: room_id || "",
+        file: file ? onUrlFile(host, filePath) : "",
+        type: file ? file.type : "",
+      });
+
+      if (file) onSaveFile(filePath, file.base64);
+
+      return posts;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getAllPostsMD: async () => {
+    try {
+      const posts = await Posts.find().populate({
+        path: "poster",
+        model: Account,
+        select: "user_name",
+      });
+      return posts.reverse();
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getPostsDetailMD: async ({ posts_id }) => {
+    try {
+      const postsDetail = await Posts.findOne({ _id: posts_id }).populate({
+        path: "poster",
+        model: Account,
+        select: "user_name",
+      });
+
+      return postsDetail;
+    } catch (error) {
+      if (error?.stringValue) {
+        throwError(201, "Bài viết không tồn tại!");
+      }
+      throw error;
+    }
+  },
+
   // Socket.io -------------------------------------------
 
   createMessageMD: async ({ room_id, sender, content, image, host }) => {
@@ -219,6 +307,50 @@ module.exports = {
         });
 
       return room;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  likePostsMD: async ({ posts_id, people_like }) => {
+    try {
+      const post = await Posts.findOne({
+        _id: posts_id,
+        likes: { $in: [people_like] },
+      });
+
+      if (post) {
+        await Posts.updateOne(
+          { _id: posts_id },
+          {
+            $pull: { likes: people_like },
+          }
+        );
+      } else {
+        await Posts.updateOne(
+          { _id: posts_id },
+          {
+            $push: { likes: people_like },
+          }
+        );
+      }
+
+      const posts = await Posts.find().populate({
+        path: "poster",
+        model: Account,
+        select: "user_name",
+      });
+
+      const postsDetail = await Posts.findOne({ _id: posts_id }).populate({
+        path: "poster",
+        model: Account,
+        select: "user_name",
+      });
+
+      return {
+        allPosts: posts.reverse(),
+        postsDetail,
+      };
     } catch (error) {
       throw error;
     }

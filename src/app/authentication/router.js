@@ -34,22 +34,57 @@ module.exports = (router, io) => {
   router.get(`${commonRoute}/user`, authenticateToken, controller.userInfoCT);
 
   // API tạo phòng
-  router.post(`${commonRoute}/room`, controller.createRoomCT);
+  router.post(
+    `${commonRoute}/room`,
+    authenticateToken,
+    controller.createRoomCT
+  );
+
+  // API cập nhật thông tin phòng
+  router.put(
+    `${commonRoute}/room/update`,
+    authenticateToken,
+    controller.updateRoomCT
+  );
 
   // API lấy thông tin phòng
-  router.get(`${commonRoute}/room`, controller.getRoomCT);
+  router.get(`${commonRoute}/room`, authenticateToken, controller.getRoomCT);
 
   // API lấy danh sách tin nhắn theo id người dùng
-  router.get(`${commonRoute}/rooms/:id`, controller.getRoomsCT);
+  router.get(
+    `${commonRoute}/rooms/:id`,
+    authenticateToken,
+    controller.getRoomsCT
+  );
 
   // API tham gia phòng
-  router.put(`${commonRoute}/room`, controller.joinRoomCT);
+  router.put(`${commonRoute}/room`, authenticateToken, controller.joinRoomCT);
+
+  // API tạo mới bài viết
+  router.post(
+    `${commonRoute}/posts`,
+    authenticateToken,
+    controller.createPostsCT
+  );
+
+  // API lấy danh sách bài viết
+  router.get(
+    `${commonRoute}/posts`,
+    authenticateToken,
+    controller.getAllPostsCT
+  );
+
+  // API lấy chi tiết bài viết
+  router.get(
+    `${commonRoute}/posts/:id`,
+    authenticateToken,
+    controller.getPostsDetailCT
+  );
 
   // Socket.io -------------------------------------------
 
   io.on("connection", (socket) => {
     console.log("Đã kết nối!");
-
     socket.on(`chat-message`, async (data) => {
       if (data?.content || data?.image) {
         const res = await controller.createMessageCT(
@@ -57,6 +92,17 @@ module.exports = (router, io) => {
           socket.request.headers.host
         );
         io.emit(`chat-message-${data?.room_id}`, { message: res, data });
+      }
+    });
+
+    // Xử lý tính năng like
+    socket.on(`like-posts`, async (data) => {
+      if (data) {
+        const res = await controller.likePostsCT(data);
+        io.emit(`like-posts`, {
+          allPosts: res?.allPosts,
+          postsDetail: res?.postsDetail,
+        });
       }
     });
   });
